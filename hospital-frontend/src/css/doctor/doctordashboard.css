@@ -1,0 +1,401 @@
+/* ============================================
+   DOCTOR DASHBOARD - APOLLO STYLE
+   Modern, clean, medical-grade UI
+============================================ */
+
+/* ---------- CSS Variables ---------- */
+:root {
+  --primary: #2b7cff;
+  --primary-dark: #1a5ecc;
+  --primary-light: #e8f0ff;
+  --secondary: #00c9a7;
+  --accent: #ff6b6b;
+  --gray-100: #f8f9fc;
+  --gray-200: #f1f3f9;
+  --gray-300: #e2e6ed;
+  --gray-400: #cbd0d9;
+  --gray-500: #9aa2b1;
+  --gray-600: #6c757d;
+  --gray-700: #495057;
+  --gray-800: #343a40;
+  --gray-900: #212529;
+  --shadow-sm: 0 2px 6px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --transition: all 0.2s ease;
+}
+
+/* ---------- Layout ---------- */
+.doctor-dashboard-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background: var(--gray-100);
+}
+
+.doctor-main-content {
+  flex: 1;
+  overflow-x: auto;
+  padding: 24px 32px;
+  transition: margin-left 0.3s ease;
+}
+
+/* ---------- Topbar ---------- */
+.doctor-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.menu-toggle {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--gray-700);
+  transition: var(--transition);
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: block;
+  }
+}
+
+.greeting h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 0;
+}
+
+.greeting p {
+  font-size: 14px;
+  color: var(--gray-600);
+  margin: 4px 0 0;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.search-wrapper {
+  position: relative;
+  width: 260px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-500);
+  font-size: 14px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  border: 1px solid var(--gray-300);
+  border-radius: 40px;
+  background: white;
+  font-size: 14px;
+  transition: var(--transition);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(43,124,255,0.1);
+}
+
+.notification-btn {
+  position: relative;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--gray-600);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.notification-btn:hover {
+  background: var(--gray-200);
+}
+
+.notification-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.doctor-avatar {
+  font-size: 36px;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+/* ---------- Stats Grid ---------- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  border: 1px solid var(--gray-200);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-card h3 {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--gray-800);
+}
+
+.stat-card p {
+  font-size: 14px;
+  color: var(--gray-600);
+  margin: 8px 0 12px;
+  font-weight: 500;
+}
+
+.trend {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 20px;
+  background: var(--gray-100);
+}
+
+.trend.up {
+  color: var(--secondary);
+  background: #e0faf5;
+}
+
+.trend.down {
+  color: var(--accent);
+  background: #ffe8e8;
+}
+
+.trend.neutral {
+  color: var(--gray-600);
+  background: var(--gray-200);
+}
+
+/* ---------- Dashboard Grid ---------- */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel {
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: var(--transition);
+  border: 1px solid var(--gray-200);
+}
+
+.panel:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--gray-100);
+}
+
+.panel-header svg {
+  color: var(--primary);
+  font-size: 18px;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.panel-body {
+  padding: 16px 20px;
+}
+
+.chart-panel .panel-body {
+  padding: 8px;
+}
+
+.chart-container {
+  height: 280px;
+  position: relative;
+}
+
+/* ---------- Tables ---------- */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 12px 8px;
+  font-weight: 600;
+  color: var(--gray-600);
+  border-bottom: 1px solid var(--gray-300);
+}
+
+.data-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--gray-200);
+  color: var(--gray-700);
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 40px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.waiting {
+  background: #fff3e0;
+  color: #f4a100;
+}
+
+.status-badge.consulting {
+  background: #e8f0ff;
+  color: var(--primary);
+}
+
+.status-badge.completed {
+  background: #e0faf5;
+  color: var(--secondary);
+}
+
+/* ---------- Lists (Alerts & Tasks) ---------- */
+.alert-list, .task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.alert-list li, .task-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-200);
+  font-size: 14px;
+  color: var(--gray-700);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alert-list li::before {
+  content: "⚠️";
+  font-size: 14px;
+}
+
+.task-list li::before {
+  content: "📋";
+  font-size: 14px;
+}
+
+.alert-list li:last-child, .task-list li:last-child {
+  border-bottom: none;
+}
+
+/* ---------- Loading & Error States ---------- */
+.loading-state, .error-state {
+  text-align: center;
+  padding: 48px;
+  font-size: 16px;
+  color: var(--gray-600);
+}
+
+.error-state {
+  color: var(--accent);
+}
+
+/* ---------- Responsive Tweaks ---------- */
+@media (max-width: 768px) {
+  .doctor-main-content {
+    padding: 16px;
+  }
+
+  .stats-grid {
+    gap: 16px;
+  }
+
+  .stat-card h3 {
+    font-size: 28px;
+  }
+
+  .search-wrapper {
+    width: 180px;
+  }
+
+  .greeting h1 {
+    font-size: 22px;
+  }
+}
+
+/* ---------- Animations ---------- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.panel, .stat-card {
+  animation: fadeIn 0.3s ease forwards;
+}

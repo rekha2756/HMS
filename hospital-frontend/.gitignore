@@ -1,0 +1,76 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
+.next/
+*.exe
+
+# Environment variables (sensitive data)
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+
+# IDE / OS files
+.vscode/
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+Thumbs.db
+desktop.ini
+
+# Package manager lock files (optional – include if you want to ignore them)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Local configuration files
+*.local
+
+# Backend specific (if you have a separate backend folder)
+backend/node_modules/
+backend/.env
+backend/dist/
+
+# Frontend specific (if you have a separate frontend folder)
+hospital-frontend/node_modules/
+hospital-frontend/.env
+hospital-frontend/dist/
+
+# Database files (if any)
+*.sqlite
+*.db
+
+# Keys and certificates
+*.pem
+*.key
+*.crt
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

@@ -1,0 +1,191 @@
+<<<<<<< HEAD
+/* Page Background */
+.profile-container {
+  min-height: 100vh; /* changed from height to min-height */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* start at top so scrolling works */
+  background: linear-gradient(135deg, #7da5d2, #539cbc);
+  padding: 40px 20px;
+  overflow-y: auto; /* enable vertical scrolling */
+  box-sizing: border-box;
+}
+
+/* Profile Card */
+.profile-card {
+  background: white;
+  width: 420px;
+  border-radius: 15px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  padding: 30px;
+  text-align: center;
+  animation: fadeIn 0.6s ease;
+  margin-top: 20px; /* spacing from top when scrolling */
+  margin-bottom: 20px; /* spacing at bottom */
+}
+
+/* Header */
+.profile-header {
+  margin-bottom: 25px;
+=======
+
+
+.profile-container{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#1e3a8a,#2563eb);
+padding:20px;
+}
+
+
+
+.profile-card{
+background:white;
+width:420px;
+border-radius:15px;
+box-shadow:0 15px 40px rgba(0,0,0,0.2);
+padding:30px;
+text-align:center;
+animation:fadeIn 0.6s ease;
+}
+
+
+
+.profile-header{
+margin-bottom:25px;
+>>>>>>> 636b696db5986c59fef126c6fa4ac715d14d8c60
+}
+
+.profile-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 5px solid #2563eb;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.profile-header h2 {
+  margin: 5px 0;
+  color: #1e3a8a;
+}
+
+.role {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+<<<<<<< HEAD
+/* Details */
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 15px;
+=======
+
+
+.profile-details{
+display:flex;
+flex-direction:column;
+gap:15px;
+margin-top:15px;
+>>>>>>> 636b696db5986c59fef126c6fa4ac715d14d8c60
+}
+
+.detail-group {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.detail-group label {
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  color: #374151;
+  font-weight: 600;
+}
+
+.detail-group input {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  font-size: 0.9rem;
+}
+
+<<<<<<< HEAD
+/* Buttons */
+.profile-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 25px;
+=======
+
+
+.profile-actions{
+display:flex;
+justify-content:space-between;
+margin-top:25px;
+>>>>>>> 636b696db5986c59fef126c6fa4ac715d14d8c60
+}
+
+.edit-btn {
+  flex: 1;
+  margin-right: 10px;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.edit-btn:hover {
+  background: #7d869e;
+}
+
+.logout-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #ef4444;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.logout-btn:hover {
+  background: #dc2626;
+}
+
+<<<<<<< HEAD
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+=======
+
+@keyframes fadeIn{
+from{
+opacity:0;
+transform:translateY(20px);
+}
+to{
+opacity:1;
+transform:translateY(0);
+}
+>>>>>>> 636b696db5986c59fef126c6fa4ac715d14d8c60
+}

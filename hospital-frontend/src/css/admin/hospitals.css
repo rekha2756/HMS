@@ -1,0 +1,54 @@
+.hospitals-container {
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f9fafe;
+  min-height: 100vh;
+}
+
+.hospitals-container h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.hospitals-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  background-color: #fff;
+}
+
+.hospitals-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.hospitals-table th, 
+.hospitals-table td {
+  text-align: left;
+  padding: 12px 15px;
+}
+
+.hospitals-table th {
+  background-color: #4a90e2;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  position: sticky;
+  top: 0;
+}
+
+.hospitals-table tbody tr {
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s ease;
+}
+
+.hospitals-table tbody tr:hover {
+  background-color: #f1f6ff;
+}
+
+.hospitals-table td {
+  font-size: 14px;
+  color: #444;
+}

@@ -1,0 +1,51 @@
+.report-container{
+  width: 800px;
+  margin: auto;
+  background: white;
+  padding: 30px;
+  border: 1px solid #ddd;
+}
+
+.hospital-name{
+  text-align:center;
+  font-size:26px;
+  color:#2c3e50;
+}
+
+.report-title{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.patient-info{
+  margin-bottom:20px;
+}
+
+.report-table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.report-table th,
+.report-table td{
+  border:1px solid #ccc;
+  padding:10px;
+  text-align:left;
+}
+
+.report-table th{
+  background:#f4f6f9;
+}
+
+.low{
+  color:red;
+}
+
+.high{
+  color:red;
+}
+
+.signature{
+  margin-top:30px;
+  text-align:right;
+}

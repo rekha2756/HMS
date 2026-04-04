@@ -1,0 +1,137 @@
+.usermanagement-container {
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f9fafe;
+  min-height: 100vh;
+}
+
+.usermanagement-container h2 {
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.um-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.um-filters input,
+.um-filters select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.um-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  margin-bottom: 30px;
+}
+
+.um-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.um-table th,
+.um-table td {
+  padding: 12px 15px;
+  text-align: left;
+}
+
+.um-table th {
+  background-color: #4a90e2;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  position: sticky;
+  top: 0;
+}
+
+.um-table tbody tr {
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s ease;
+}
+
+.um-table tbody tr:hover {
+  background-color: #f1f6ff;
+}
+
+.status {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  text-align: center;
+  display: inline-block;
+}
+
+.status.active {
+  background-color: #28a745;
+}
+
+.status.inactive {
+  background-color: #dc3545;
+}
+
+.um-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  margin-right: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #fff;
+  background-color: #4a90e2;
+  transition: background-color 0.2s ease;
+}
+
+.um-btn.delete {
+  background-color: #dc3545;
+}
+
+.um-btn.reset {
+  background-color: #f39c12;
+}
+
+.um-btn:hover {
+  opacity: 0.85;
+}
+
+.um-add-user {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.um-add-user h3 {
+  margin-bottom: 15px;
+  font-size: 20px;
+  color: #333;
+}
+
+.um-add-user input,
+.um-add-user select {
+  display: block;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.add-user-btn {
+  background-color: #28a745;
+  color: #fff;
+  width: 100%;
+  font-weight: 600;
+}

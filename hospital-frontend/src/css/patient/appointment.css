@@ -1,0 +1,112 @@
+
+/* Page Layout */
+.container {
+  display: flex;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f4f6f9;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 220px;
+  height: 100vh;
+  background-color: #1f2937;
+  color: white;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  padding: 20px;
+}
+
+/* Logo */
+.sidebar h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Menu List */
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Menu Items */
+.sidebar ul li {
+  margin-bottom: 8px;
+}
+
+/* Links */
+.sidebar ul li a {
+  text-decoration: none;
+  color: white;
+  padding: 10px 12px;
+  display: block;
+  border-radius: 6px;
+  font-size: 15px;
+  transition: 0.3s;
+}
+
+/* Hover Effect */
+.sidebar ul li a:hover {
+  background-color: #2563eb;
+}
+
+/* Main Content */
+.main-content {
+  margin-left: 240px;
+  padding: 30px;
+  flex: 1;
+}
+
+.main-content h1 {
+  margin-bottom: 25px;
+  color: #333;
+}
+
+/* Appointment Form */
+.appointment-form {
+  background: white;
+  padding: 30px;
+  max-width: 600px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Inputs */
+.appointment-form input,
+.appointment-form select,
+.appointment-form textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+/* Textarea */
+.appointment-form textarea {
+  height: 80px;
+  resize: none;
+}
+
+/* Button */
+.appointment-form button {
+  width: 100%;
+  padding: 12px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.appointment-form button:hover {
+  background-color: #1d4ed8;
+}

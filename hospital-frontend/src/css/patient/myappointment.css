@@ -1,0 +1,153 @@
+/* Page Layout */
+.container {
+  display: flex;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f4f6fb;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background-color: #2b2e83;
+  color: white;
+  position: fixed;
+  padding: 20px;
+}
+
+.sidebar h2 {
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  margin-bottom: 12px;
+}
+
+.sidebar ul li a {
+  text-decoration: none;
+  color: white;
+  display: block;
+  padding: 10px;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+.sidebar ul li a:hover {
+  background-color: #4448b0;
+}
+
+.sidebar ul li.active a {
+  background-color: #ffcc00;
+  color: black;
+  font-weight: bold;
+}
+
+/* Main Content */
+.main-content{
+  margin-left: 250px;
+  padding: 20px;
+}
+
+
+
+.main-content h2 {
+  margin-bottom: 25px;
+  color: #2b2e83;
+}
+
+/* Appointment Card */
+.appointment-card {
+  background: white;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* Card Header */
+.appointment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.appointment-header h3 {
+  margin: 0;
+}
+
+/* Status Badge */
+.status {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.confirmed {
+  background-color: #e6f9ec;
+  color: green;
+}
+
+.pending {
+  background-color: #fff4e5;
+  color: orange;
+}
+
+.cancelled {
+  background-color: #fdecea;
+  color: red;
+}
+
+/* Appointment Details */
+.appointment-body p {
+  margin: 6px 0;
+}
+
+/* Buttons */
+.appointment-actions {
+  margin-top: 15px;
+}
+
+.appointment-actions button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-right: 10px;
+  font-size: 14px;
+}
+
+.reschedule-btn {
+  background-color: #2b2e83;
+  color: white;
+}
+
+.reschedule-btn:hover {
+  background-color: #1e2170;
+}
+
+.cancel-btn {
+  background-color: #ff4d4d;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #e63b3b;
+}
+
+/* No Appointment Box */
+.no-appointment {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
