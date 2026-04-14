@@ -33,6 +33,10 @@ function Login() {
   const [otpError, setOtpError] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [registrationData, setRegistrationData] = useState(null);
+  
+  // Resend timer state
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [canResend, setCanResend] = useState(true);
 
   // ================= ROLE CONFIG =================
   const roleConfig = {
@@ -82,6 +86,18 @@ function Login() {
       setLoginAttempts(0);
     }
   }, [isLocked, lockTimeLeft]);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => {
+        setResendCooldown(resendCooldown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (resendCooldown === 0 && !canResend) {
+      setCanResend(true);
+    }
+  }, [resendCooldown, canResend]);
 
   // ================= LOGIN =================
   const loginUser = async () => {
@@ -153,8 +169,28 @@ function Login() {
       setShowOtpModal(true);
       setOtpError("");
       showSuccess("OTP sent to your email. Please check your inbox.");
+      // Start cooldown (60 seconds)
+      setResendCooldown(60);
+      setCanResend(false);
     } catch (err) {
       showError(err.response?.data?.error || "Failed to send OTP. Try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!canResend || resendCooldown > 0) return;
+    
+    setIsLoading(true);
+    try {
+      await api.post("/send-otp", { email });
+      setOtpError("");
+      showSuccess("OTP resent successfully!");
+      setResendCooldown(60);
+      setCanResend(false);
+    } catch (err) {
+      showError(err.response?.data?.error || "Failed to resend OTP. Try again.");
     } finally {
       setIsLoading(false);
     }
@@ -220,6 +256,8 @@ function Login() {
     setOtpError("");
     setShowOtpModal(false);
     setOtpSent(false);
+    setResendCooldown(0);
+    setCanResend(true);
   };
 
   const toggleRegisterMode = (e) => {
@@ -421,18 +459,47 @@ function Login() {
         </div>
       </div>
 
-      {/* OTP Modal */}
+      {/* OTP Modal with Resend Button */}
       {showOtpModal && (
         <div className="modal-overlay" onClick={() => { if (!isLoading) setShowOtpModal(false); }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Verify Email</h3>
+            <h3>Verify Your Email</h3>
             <p>We've sent a 6-digit OTP to <strong>{email}</strong></p>
+            
             <div className="input-group">
-              <input type="text" maxLength="6" className="form-input otp-input" placeholder="Enter OTP" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} />
+              <input 
+                type="text" 
+                maxLength="6" 
+                className="form-input otp-input" 
+                placeholder="Enter OTP" 
+                value={otp} 
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} 
+                autoFocus
+              />
             </div>
+            
             {otpError && <span className="error-message">{otpError}</span>}
+            
+            {/* Resend section */}
+            <div className="resend-section">
+              {resendCooldown > 0 ? (
+                <span className="resend-timer">Resend available in {resendCooldown}s</span>
+              ) : (
+                <button 
+                  type="button" 
+                  className="resend-btn" 
+                  onClick={handleResendOtp} 
+                  disabled={!canResend || isLoading}
+                >
+                  Resend OTP
+                </button>
+              )}
+            </div>
+            
             <div className="modal-buttons">
-              <button className="btn btn-secondary" onClick={() => setShowOtpModal(false)} disabled={isLoading}>Cancel</button>
+              <button className="btn btn-secondary" onClick={() => setShowOtpModal(false)} disabled={isLoading}>
+                Cancel
+              </button>
               <button className="btn btn-primary" onClick={handleVerifyOtpAndRegister} disabled={isLoading}>
                 {isLoading ? "Verifying..." : "Verify & Register"}
               </button>

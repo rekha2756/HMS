@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 const { query } = require('../services/dbService');
+const otpController = require('../controllers/otpController');
 
 const router = express.Router();
 
@@ -13,11 +14,14 @@ const privateKey = fs.readFileSync(
   path.join(__dirname, '../keys/private_key.pem'),
   'utf8'
 );
-
 const publicKey = fs.readFileSync(
   path.join(__dirname, '../keys/public_key.pem'),
   'utf8'
 );
+
+// ================= OTP ROUTES =================
+router.post('/send-otp', otpController.sendOtp);
+router.post('/verify-otp', otpController.verifyOtp);
 
 // ================= LOGIN =================
 router.post('/login', async (req, res) => {
@@ -35,7 +39,6 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    // Query user
     const users = await query(tenantId, 'SELECT * FROM admin WHERE email = ?', [email]);
     console.log("📊 Users found in database:", users.length);
 
@@ -46,9 +49,7 @@ router.post('/login', async (req, res) => {
 
     const user = users[0];
     console.log("👤 User found:", { id: user.id, email: user.email, role: user.role });
-    console.log("🔑 Stored password hash:", user.password);
 
-    // Compare passwords
     const valid = await bcrypt.compare(password, user.password);
     console.log("🔐 Password valid?", valid);
 
@@ -59,7 +60,6 @@ router.post('/login', async (req, res) => {
 
     console.log("✅ Password matched!");
 
-    // Generate Access Token
     const accessToken = jwt.sign(
       {
         userId: user.id,
@@ -71,18 +71,15 @@ router.post('/login', async (req, res) => {
     );
     console.log("🎫 Access token generated");
 
-    // Generate Refresh Token
     const refreshToken = jwt.sign(
       { userId: user.id },
       privateKey,
       { algorithm: 'RS256', expiresIn: process.env.REFRESH_TOKEN_EXPIRY || '7d' }
     );
 
-    // Store refresh token
     await query(tenantId, 'UPDATE admin SET refresh_token = ? WHERE id = ?', [refreshToken, user.id]);
     console.log("💾 Refresh token stored");
 
-    // Set cookie
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

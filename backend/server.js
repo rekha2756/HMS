@@ -402,6 +402,7 @@ app.get("/api/appointments/:id", authMiddleware, async (req, res) => {
   }
 });
 
+// ✅ UPDATED: Send email confirmation after booking
 app.post("/api/appointments", authMiddleware, async (req, res) => {
   const { patient_id, doctor_id, appointment_date, appointment_time, status, reason, patient_name, doctor_name } = req.body;
   try {
@@ -420,12 +421,88 @@ app.post("/api/appointments", authMiddleware, async (req, res) => {
       return res.status(400).json({ error: "Missing patient or doctor information" });
     }
     const result = await query(req.tenantId, sql, params);
-    res.json({ id: result.insertId, message: "Appointment booked successfully" });
+    const appointmentId = result.insertId;
+
+    // Send email notification to patient (if patient_id exists)
+    if (patient_id) {
+      try {
+        // Fetch patient email and name from patients table
+        const patientRows = await query(req.tenantId, "SELECT email, name FROM patients WHERE id = ?", [patient_id]);
+        if (patientRows.length > 0) {
+          const patientEmail = patientRows[0].email;
+          const patientName = patientRows[0].name;
+          
+          // Get doctor name if not already provided
+          let finalDoctorName = doctor_name;
+          if (!finalDoctorName && doctor_id) {
+            const doctorRows = await query(req.tenantId, "SELECT name FROM doctors WHERE id = ?", [doctor_id]);
+            if (doctorRows.length) finalDoctorName = doctorRows[0].name;
+          }
+          
+          const appointmentDetails = {
+            doctor_name: finalDoctorName || 'Doctor',
+            appointment_date,
+            appointment_time,
+            reason: reason || 'Not specified',
+            status: status || 'Pending',
+          };
+          
+          // Send email asynchronously (don't await to avoid delaying response)
+          sendAppointmentEmail(patientEmail, patientName, appointmentDetails).catch(err => console.error('Email error:', err));
+        }
+      } catch (emailErr) {
+        console.error('Error preparing appointment email:', emailErr);
+        // Do not fail the booking because of email error
+      }
+    }
+
+    res.json({ id: appointmentId, message: "Appointment booked successfully" });
   } catch (err) {
     console.error("Appointment creation error:", err);
     res.status(500).json({ error: err.message });
   }
 });
+
+// Helper function to send appointment confirmation email
+async function sendAppointmentEmail(patientEmail, patientName, appointmentDetails) {
+  const { doctor_name, appointment_date, appointment_time, reason, status } = appointmentDetails;
+  
+  const mailOptions = {
+    from: '"HealthAxis Hospital" <healthaxis.team@gmail.com>',
+    to: patientEmail,
+    subject: 'Appointment Confirmation – HealthAxis HMS',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+        <div style="text-align: center; background: #1a2c3e; padding: 15px; border-radius: 10px 10px 0 0;">
+          <h2 style="color: #ffffff; margin: 0;">🏥 HealthAxis Hospital</h2>
+        </div>
+        <div style="padding: 20px;">
+          <h3 style="color: #2b7cff;">Appointment Confirmed</h3>
+          <p>Dear <strong>${patientName}</strong>,</p>
+          <p>Your appointment has been successfully booked. Please find the details below:</p>
+          <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+            <tr><td style="padding: 8px; background: #f8f9fc;"><strong>Doctor:</strong></td><td style="padding: 8px;">${doctor_name}</td></tr>
+            <tr><td style="padding: 8px; background: #f8f9fc;"><strong>Date:</strong></td><td style="padding: 8px;">${appointment_date}</td></tr>
+            <tr><td style="padding: 8px; background: #f8f9fc;"><strong>Time:</strong></td><td style="padding: 8px;">${appointment_time}</td></tr>
+            <tr><td style="padding: 8px; background: #f8f9fc;"><strong>Reason:</strong></td><td style="padding: 8px;">${reason}</td></tr>
+            <tr><td style="padding: 8px; background: #f8f9fc;"><strong>Status:</strong></td><td style="padding: 8px; text-transform: capitalize;">${status}</td></tr>
+          </table>
+          <p>Please arrive 15 minutes before your scheduled time. If you need to reschedule, please contact us or use the patient portal.</p>
+          <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;">
+          <p style="font-size: 12px; color: #6c757d;">This is an automated message. Please do not reply directly.</p>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`📧 Appointment confirmation email sent to ${patientEmail}`);
+  } catch (err) {
+    console.error(`❌ Failed to send appointment email to ${patientEmail}:`, err.message);
+    // Do not re-throw – email failure should not break the booking process
+  }
+}
 
 app.put("/api/appointments/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;

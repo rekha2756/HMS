@@ -715,3 +715,30 @@ body {
 .btn-secondary:hover {
   background: #dee2e6;
 }
+/* OTP Modal Resend Styles */
+.resend-section {
+  text-align: center;
+  margin: 1rem 0;
+}
+.resend-btn {
+  background: none;
+  border: none;
+  color: var(--teal, #14B8A6);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.85rem;
+}
+.resend-btn:hover {
+  color: var(--accent, #EA580C);
+}
+.resend-timer {
+  font-size: 0.85rem;
+  color: var(--muted, #475569);
+}
+.otp-input {
+  text-align: center;
+  letter-spacing: 4px;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
