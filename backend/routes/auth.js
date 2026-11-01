@@ -25,98 +25,138 @@ router.post('/verify-otp', otpController.verifyOtp);
 
 // ================= LOGIN =================
 router.post('/login', async (req, res) => {
-  console.log("=".repeat(50));
-  console.log("🔐 LOGIN ATTEMPT");
-  console.log("BODY:", req.body);
-  console.log("TENANT:", req.tenantId);
-
   const { email, password } = req.body;
   const tenantId = req.tenantId;
 
+  // Validate input
+  if (!email || !password) {
+    return res.status(400).json({
+      error: 'Email and password are required'
+    });
+  }
+
   if (!tenantId) {
-    console.log("❌ Tenant missing");
-    return res.status(400).json({ error: 'Tenant missing' });
+    return res.status(400).json({
+      error: 'Tenant missing'
+    });
   }
 
   try {
-    const users = await query(tenantId, 'SELECT * FROM admin WHERE email = ?', [email]);
-    console.log("📊 Users found in database:", users.length);
+    // Find user by email
+    const users = await query(
+      tenantId,
+      'SELECT * FROM admin WHERE email = ?',
+      [email]
+    );
 
     if (users.length === 0) {
-      console.log("❌ No user found with email:", email);
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({
+        error: 'Invalid email or password'
+      });
     }
 
     const user = users[0];
-    console.log("👤 User found:", { id: user.id, email: user.email, role: user.role });
 
-    const valid = await bcrypt.compare(password, user.password);
-    console.log("🔐 Password valid?", valid);
-
-    if (!valid) {
-      console.log("❌ Password mismatch for user:", email);
-      return res.status(401).json({ error: 'Invalid email or password' });
+    // Check account status
+    if (Number(user.is_active) !== 1) {
+      return res.status(403).json({
+        error: 'Your account is inactive. Contact administrator.'
+      });
     }
 
-    console.log("✅ Password matched!");
+    // Verify password
+    const valid = await bcrypt.compare(password, user.password);
 
+    if (!valid) {
+      return res.status(401).json({
+        error: 'Invalid email or password'
+      });
+    }
+
+    // Generate access token
     const accessToken = jwt.sign(
       {
         userId: user.id,
         role: user.role || 'admin',
-        tenantId,
+        tenantId
       },
       privateKey,
-      { algorithm: 'RS256', expiresIn: process.env.ACCESS_TOKEN_EXPIRY || '15m' }
+      {
+        algorithm: 'RS256',
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRY || '15m'
+      }
     );
-    console.log("🎫 Access token generated");
 
+    // Generate refresh token
     const refreshToken = jwt.sign(
-      { userId: user.id },
+      {
+        userId: user.id
+      },
       privateKey,
-      { algorithm: 'RS256', expiresIn: process.env.REFRESH_TOKEN_EXPIRY || '7d' }
+      {
+        algorithm: 'RS256',
+        expiresIn: process.env.REFRESH_TOKEN_EXPIRY || '7d'
+      }
     );
 
-    await query(tenantId, 'UPDATE admin SET refresh_token = ? WHERE id = ?', [refreshToken, user.id]);
-    console.log("💾 Refresh token stored");
+    // Store refresh token
+    await query(
+      tenantId,
+      'UPDATE admin SET refresh_token = ? WHERE id = ?',
+      [refreshToken, user.id]
+    );
 
+    // Set refresh token cookie
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
-    console.log("✅ Login successful! Sending response...");
-    console.log("=".repeat(50));
-
-    res.json({
+    // Send response
+    return res.json({
       accessToken,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role || 'admin',
-      },
+        role: user.role || 'admin'
+      }
     });
 
   } catch (err) {
-    console.error('❌ Login Error:', err);
-    res.status(500).json({ error: 'Login failed' });
+    console.error('Login Error:', err.message);
+
+    return res.status(500).json({
+      error: 'Login failed'
+    });
   }
 });
 
 // ================= REFRESH =================
 router.post('/refresh', async (req, res) => {
   const refreshToken = req.cookies?.refreshToken;
+  const tenantId = req.tenantId;
 
   if (!refreshToken) {
-    return res.status(401).json({ error: 'No refresh token' });
+    return res.status(401).json({
+      error: 'No refresh token'
+    });
   }
 
   try {
-    const decoded = jwt.verify(refreshToken, publicKey, { algorithms: ['RS256'] });
-    const tenantId = req.tenantId;
+    const decoded = jwt.verify(
+      refreshToken,
+      publicKey,
+      { algorithms: ['RS256'] }
+    );
+
+    if (!decoded.userId || !tenantId) {
+      return res.status(401).json({
+        error: 'Invalid refresh token'
+      });
+    }
 
     const users = await query(
       tenantId,
@@ -125,42 +165,100 @@ router.post('/refresh', async (req, res) => {
     );
 
     if (users.length === 0) {
-      return res.status(403).json({ error: 'Invalid refresh token' });
+      return res.status(403).json({
+        error: 'Invalid refresh token'
+      });
     }
 
     const user = users[0];
+
+    // Check whether account is active
+    if (Number(user.is_active) !== 1) {
+      await query(
+        tenantId,
+        'UPDATE admin SET refresh_token = NULL WHERE id = ?',
+        [user.id]
+      );
+
+      res.clearCookie('refreshToken');
+
+      return res.status(403).json({
+        error: 'Your account is inactive'
+      });
+    }
 
     const newAccessToken = jwt.sign(
       {
         userId: user.id,
         role: user.role || 'admin',
-        tenantId,
+        tenantId
       },
       privateKey,
-      { algorithm: 'RS256', expiresIn: process.env.ACCESS_TOKEN_EXPIRY || '15m' }
+      {
+        algorithm: 'RS256',
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRY || '15m'
+      }
     );
 
-    res.json({ accessToken: newAccessToken });
+    return res.json({
+      accessToken: newAccessToken
+    });
+
   } catch (err) {
-    console.error('Refresh Error:', err);
-    res.status(403).json({ error: 'Invalid refresh token' });
+    console.error('Refresh Error:', err.message);
+
+    res.clearCookie('refreshToken');
+
+    return res.status(403).json({
+      error: 'Invalid or expired refresh token'
+    });
   }
 });
 
 // ================= LOGOUT =================
 router.post('/logout', async (req, res) => {
   const refreshToken = req.cookies?.refreshToken;
+  const tenantId = req.tenantId;
 
   try {
-    if (refreshToken && req.user) {
-      await query(req.tenantId, 'UPDATE admin SET refresh_token = NULL WHERE id = ?', [req.user.userId]);
+    if (refreshToken && tenantId) {
+      try {
+        const decoded = jwt.verify(
+          refreshToken,
+          publicKey,
+          { algorithms: ['RS256'] }
+        );
+
+        await query(
+          tenantId,
+          `UPDATE admin
+           SET refresh_token = NULL
+           WHERE id = ? AND refresh_token = ?`,
+          [decoded.userId, refreshToken]
+        );
+
+      } catch (tokenError) {
+        // An expired or invalid token cannot be reused.
+        console.log('Refresh token already invalid or expired.');
+      }
     }
-    res.clearCookie('refreshToken');
-    res.json({ message: 'Logged out successfully' });
+
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    });
+
+    return res.json({
+      message: 'Logged out successfully'
+    });
+
   } catch (err) {
-    console.error('Logout Error:', err);
-    res.status(500).json({ error: 'Logout failed' });
+    console.error('Logout Error:', err.message);
+
+    return res.status(500).json({
+      error: 'Logout failed'
+    });
   }
 });
-
 module.exports = router;

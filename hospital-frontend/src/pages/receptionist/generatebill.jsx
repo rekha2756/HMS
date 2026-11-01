@@ -72,16 +72,23 @@ export default function GenerateBill() {
 
       // Navigate to bill view with clean state (no extra fields)
       navigate("/receptionist/billview", {
-        state: {
-          id: response.data.id,
-          patientId: patient.id,
-          patientName: patient.name,
-          description: formData.description,
-          totalAmount: amount,
-          paymentStatus: formData.payment_status,
-          billDate: formData.bill_date,
-        },
-      });
+  state: {
+    billId: response.data.id,
+    patientId: patient.id,
+    patientName: patient.name,
+    description: formData.description,
+
+    // Send the entered amount
+    consultationFee: amount,
+    serviceCharges: 0,
+    medicineCharges: 0,
+    discount: 0,
+
+    paymentStatus: formData.payment_status,
+    paymentMethod: formData.payment_status,
+    date: formData.bill_date,
+  },
+});
     } catch (err) {
       console.error(err);
       const errorMsg = err.response?.data?.error || "Bill generation failed";

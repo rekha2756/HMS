@@ -239,7 +239,7 @@ app.post("/api/doctors", authMiddleware, async (req, res) => {
   }
 });
 
-// ✅ FIXED: Allow updating is_available (partial update)
+// Allow updating is_available (partial update)
 app.put("/api/doctors/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { name, specialization, phone, email, experience, consultation_fee, hospital, about, is_available } = req.body;
@@ -319,7 +319,7 @@ app.delete("/api/patients/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// ==================== PATIENT PROFILE (using user_id) ====================
+// ==================== PATIENT PROFILE ====================
 app.get("/api/patient/profile", authMiddleware, async (req, res) => {
   try {
     const patient = await query(req.tenantId, "SELECT * FROM patients WHERE user_id = ?", [req.user.userId]);
@@ -346,7 +346,7 @@ app.put("/api/patient/profile", authMiddleware, async (req, res) => {
   }
 });
 
-// ==================== APPOINTMENTS (with patient filtering) ====================
+// ==================== APPOINTMENTS ====================
 app.get("/api/appointments", authMiddleware, async (req, res) => {
   try {
     let doctorId = null, patientId = null;
@@ -402,7 +402,7 @@ app.get("/api/appointments/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// ✅ UPDATED: Send email confirmation after booking
+// Send email confirmation after booking
 app.post("/api/appointments", authMiddleware, async (req, res) => {
   const { patient_id, doctor_id, appointment_date, appointment_time, status, reason, patient_name, doctor_name } = req.body;
   try {
@@ -423,22 +423,19 @@ app.post("/api/appointments", authMiddleware, async (req, res) => {
     const result = await query(req.tenantId, sql, params);
     const appointmentId = result.insertId;
 
-    // Send email notification to patient (if patient_id exists)
     if (patient_id) {
       try {
-        // Fetch patient email and name from patients table
         const patientRows = await query(req.tenantId, "SELECT email, name FROM patients WHERE id = ?", [patient_id]);
         if (patientRows.length > 0) {
           const patientEmail = patientRows[0].email;
           const patientName = patientRows[0].name;
-          
-          // Get doctor name if not already provided
+
           let finalDoctorName = doctor_name;
           if (!finalDoctorName && doctor_id) {
             const doctorRows = await query(req.tenantId, "SELECT name FROM doctors WHERE id = ?", [doctor_id]);
             if (doctorRows.length) finalDoctorName = doctorRows[0].name;
           }
-          
+
           const appointmentDetails = {
             doctor_name: finalDoctorName || 'Doctor',
             appointment_date,
@@ -446,13 +443,12 @@ app.post("/api/appointments", authMiddleware, async (req, res) => {
             reason: reason || 'Not specified',
             status: status || 'Pending',
           };
-          
-          // Send email asynchronously (don't await to avoid delaying response)
-          sendAppointmentEmail(patientEmail, patientName, appointmentDetails).catch(err => console.error('Email error:', err));
+
+          sendAppointmentEmail(patientEmail, patientName, appointmentDetails)
+            .catch(err => console.error('Email error:', err));
         }
       } catch (emailErr) {
         console.error('Error preparing appointment email:', emailErr);
-        // Do not fail the booking because of email error
       }
     }
 
@@ -466,7 +462,7 @@ app.post("/api/appointments", authMiddleware, async (req, res) => {
 // Helper function to send appointment confirmation email
 async function sendAppointmentEmail(patientEmail, patientName, appointmentDetails) {
   const { doctor_name, appointment_date, appointment_time, reason, status } = appointmentDetails;
-  
+
   const mailOptions = {
     from: '"HealthAxis Hospital" <healthaxis.team@gmail.com>',
     to: patientEmail,
@@ -497,10 +493,9 @@ async function sendAppointmentEmail(patientEmail, patientName, appointmentDetail
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`📧 Appointment confirmation email sent to ${patientEmail}`);
+    console.log(`Appointment confirmation email sent to ${patientEmail}`);
   } catch (err) {
-    console.error(`❌ Failed to send appointment email to ${patientEmail}:`, err.message);
-    // Do not re-throw – email failure should not break the booking process
+    console.error(`Failed to send appointment email to ${patientEmail}:`, err.message);
   }
 }
 
@@ -534,15 +529,28 @@ app.delete("/api/appointments/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// ==================== BILLS (patient filtering) ====================
+
+ // ==================== BILLS ====================
+
 app.get("/api/bills", authMiddleware, async (req, res) => {
   try {
     let patientId = null;
-    if (req.user.role === 'patient') {
-      const patient = await query(req.tenantId, "SELECT id FROM patients WHERE user_id = ?", [req.user.userId]);
-      if (patient.length) patientId = patient[0].id;
+
+    if (req.user.role === "patient") {
+      const patient = await query(
+        req.tenantId,
+        "SELECT id FROM patients WHERE user_id = ?",
+        [req.user.userId]
+      );
+
+      if (patient.length) {
+        patientId = patient[0].id;
+      }
     }
-    let sql, params;
+
+    let sql;
+    let params;
+
     if (patientId) {
       sql = "SELECT * FROM bills WHERE patient_id = ? ORDER BY id DESC";
       params = [patientId];
@@ -550,110 +558,339 @@ app.get("/api/bills", authMiddleware, async (req, res) => {
       sql = "SELECT * FROM bills ORDER BY id DESC";
       params = [];
     }
+
     const bills = await query(req.tenantId, sql, params);
     res.json(bills);
+
   } catch (err) {
+    console.error("Fetch Bills Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
+
+// CREATE BILL
 app.post("/api/bills", authMiddleware, async (req, res) => {
-  const { patient_id, patient_name, appointment_id, description, total_amount, amount, payment_status, status, bill_date, date } = req.body;
+  const {
+    patient_id,
+    patient_name,
+    appointment_id,
+    description,
+    total_amount,
+    amount,
+    payment_status,
+    status,
+    bill_date,
+    date,
+    payment_method
+  } = req.body;
+
   try {
-    const sql = "INSERT INTO bills (patient_id, patient_name, appointment_id, description, total_amount, amount, payment_status, status, bill_date, date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
-    const result = await query(req.tenantId, sql, [patient_id, patient_name, appointment_id, description, total_amount || amount, amount, payment_status || status, status || payment_status, bill_date || date, date || bill_date]);
-    res.json({ id: result.insertId, message: "Bill created successfully" });
+    const sql = `
+      INSERT INTO bills (
+        patient_id,
+        patient_name,
+        appointment_id,
+        description,
+        total_amount,
+        payment_status,
+        bill_date,
+        payment_method,
+        created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+    `;
+
+    const result = await query(req.tenantId, sql, [
+      patient_id || null,
+      patient_name || null,
+      appointment_id || null,
+      description || null,
+      total_amount ?? amount ?? 0,
+      payment_status || status || "Pending",
+      bill_date || date || new Date().toISOString().slice(0, 10),
+      payment_method || null
+    ]);
+
+    res.status(201).json({
+      id: result.insertId,
+      message: "Bill created successfully"
+    });
+
   } catch (err) {
+    console.error("Create Bill Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
+
+// UPDATE BILL
 app.put("/api/bills/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
-  const { description, total_amount, payment_status, status, bill_date } = req.body;
+
+  const {
+    description,
+    total_amount,
+    amount,
+    payment_status,
+    status,
+    bill_date,
+    date,
+    payment_method
+  } = req.body;
+
   try {
-    await query(req.tenantId, "UPDATE bills SET description=?, total_amount=?, payment_status=?, status=?, bill_date=? WHERE id=?", 
-      [description, total_amount, payment_status || status, status || payment_status, bill_date, id]);
-    res.json({ message: "Bill updated successfully" });
+    const updates = [];
+    const values = [];
+
+    if (description !== undefined) {
+      updates.push("description = ?");
+      values.push(description);
+    }
+
+    if (total_amount !== undefined || amount !== undefined) {
+      updates.push("total_amount = ?");
+      values.push(total_amount ?? amount);
+    }
+
+    if (payment_status !== undefined || status !== undefined) {
+      updates.push("payment_status = ?");
+      values.push(payment_status ?? status);
+    }
+
+    if (bill_date !== undefined || date !== undefined) {
+      updates.push("bill_date = ?");
+      values.push(bill_date ?? date);
+    }
+
+    if (payment_method !== undefined) {
+      updates.push("payment_method = ?");
+      values.push(payment_method);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({
+        error: "No fields provided for update"
+      });
+    }
+
+    values.push(id);
+
+    const sql = `
+      UPDATE bills
+      SET ${updates.join(", ")}
+      WHERE id = ?
+    `;
+
+    const result = await query(req.tenantId, sql, values);
+
+    res.json({
+      message: "Bill updated successfully"
+    });
+
   } catch (err) {
+    console.error("Update Bill Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
+
+// DELETE BILL
 app.delete("/api/bills/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
+
   try {
-    await query(req.tenantId, "DELETE FROM bills WHERE id = ?", [id]);
-    res.json({ message: "Bill deleted successfully" });
+    await query(
+      req.tenantId,
+      "DELETE FROM bills WHERE id = ?",
+      [id]
+    );
+
+    res.json({
+      message: "Bill deleted successfully"
+    });
+
   } catch (err) {
+    console.error("Delete Bill Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ==================== LAB REPORTS (patient filtering) ====================
+
+// ==================== LAB REPORTS ====================
 app.get("/api/labreports", authMiddleware, async (req, res) => {
   try {
-    let doctorId = null, patientId = null;
-    if (req.user.role === 'doctor') {
-      const doctor = await query(req.tenantId, "SELECT id FROM doctors WHERE user_id = ?", [req.user.userId]);
-      if (doctor.length) doctorId = doctor[0].id;
-      else return res.json([]);
-    } else if (req.user.role === 'patient') {
-      const patient = await query(req.tenantId, "SELECT id FROM patients WHERE user_id = ?", [req.user.userId]);
-      if (patient.length) patientId = patient[0].id;
+    let doctorId = null;
+    let patientId = null;
+
+    if (req.user.role === "doctor") {
+      const doctor = await query(
+        req.tenantId,
+        "SELECT id FROM doctors WHERE user_id = ?",
+        [req.user.userId]
+      );
+
+      if (doctor.length) {
+        doctorId = doctor[0].id;
+      } else {
+        return res.json([]);
+      }
+
+    } else if (req.user.role === "patient") {
+      const patient = await query(
+        req.tenantId,
+        "SELECT id FROM patients WHERE user_id = ?",
+        [req.user.userId]
+      );
+
+      if (patient.length) {
+        patientId = patient[0].id;
+      } else {
+        return res.json([]);
+      }
     }
-    let sql, params;
+
+    let sql = `
+      SELECT
+        lr.*,
+        COALESCE(lr.patient_name, p.name) AS patient_name
+      FROM lab_reports lr
+      LEFT JOIN patients p ON lr.patient_id = p.id
+    `;
+
+    let params = [];
+
     if (doctorId) {
-      sql = "SELECT * FROM lab_reports WHERE doctor_id = ? ORDER BY id DESC";
+      sql += " WHERE lr.doctor_id = ?";
       params = [doctorId];
+
     } else if (patientId) {
-      sql = "SELECT * FROM lab_reports WHERE patient_id = ? ORDER BY id DESC";
+      sql += " WHERE lr.patient_id = ?";
       params = [patientId];
-    } else {
-      sql = "SELECT * FROM lab_reports ORDER BY id DESC";
-      params = [];
     }
+
+    sql += " ORDER BY lr.id DESC";
+
     const reports = await query(req.tenantId, sql, params);
+
     res.json(reports);
+
   } catch (err) {
+    console.error("Get lab reports error:", err);
     res.status(500).json({ error: err.message });
   }
 });
-
 app.get("/api/labreports/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
+
   try {
-    const reports = await query(req.tenantId, "SELECT * FROM lab_reports WHERE id = ?", [id]);
-    if (!reports.length) return res.status(404).json({ error: "Lab report not found" });
+    const reports = await query(
+      req.tenantId,
+      `SELECT
+         lr.*,
+         COALESCE(lr.patient_name, p.name) AS patient_name
+       FROM lab_reports lr
+       LEFT JOIN patients p ON lr.patient_id = p.id
+       WHERE lr.id = ?`,
+      [id]
+    );
+
+    if (!reports.length) {
+      return res.status(404).json({ error: "Lab report not found" });
+    }
+
     res.json(reports[0]);
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 app.post("/api/labreports", authMiddleware, async (req, res) => {
-  const { patient_id, doctor_id, test_name, test_date, result, normal_range, remark, patient_name } = req.body;
+  const {
+    patient_id,
+    doctor_id,
+    test_name,
+    test_date,
+    result,
+    normal_range,
+    remark,
+    patient_name
+  } = req.body;
+
   try {
-    let finalDoctorId = doctor_id;
+    let finalDoctorId = doctor_id ?? null;
+
     if (!finalDoctorId && req.user.role === "doctor") {
-      const doctor = await query(req.tenantId, "SELECT id FROM doctors WHERE user_id = ?", [req.user.userId]);
-      if (doctor.length) finalDoctorId = doctor[0].id;
+      const doctor = await query(
+        req.tenantId,
+        "SELECT id FROM doctors WHERE user_id = ?",
+        [req.user.userId]
+      );
+
+      if (doctor.length) {
+        finalDoctorId = doctor[0].id;
+      }
     }
-    let sql, params;
-    if (patient_name) {
-      sql = `INSERT INTO lab_reports (patient_name, doctor_id, test_name, test_date, result, normal_range, remark, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`;
-      params = [patient_name, finalDoctorId, test_name, test_date, result, normal_range, remark];
+
+    let sql;
+    let params;
+
+    if (patient_id) {
+      sql = `
+        INSERT INTO lab_reports
+        (patient_id, doctor_id, test_name, test_date, result, normal_range, remark, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+      `;
+
+      params = [
+        patient_id ?? null,
+        finalDoctorId,
+        test_name ?? null,
+        test_date ?? null,
+        result ?? null,
+        normal_range ?? null,
+        remark ?? null
+      ];
+
+    } else if (patient_name) {
+      sql = `
+        INSERT INTO lab_reports
+        (patient_name, doctor_id, test_name, test_date, result, normal_range, remark, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+      `;
+
+      params = [
+        patient_name ?? null,
+        finalDoctorId,
+        test_name ?? null,
+        test_date ?? null,
+        result ?? null,
+        normal_range ?? null,
+        remark ?? null
+      ];
+
     } else {
-      sql = `INSERT INTO lab_reports (patient_id, doctor_id, test_name, test_date, result, normal_range, remark, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`;
-      params = [patient_id, finalDoctorId, test_name, test_date, result, normal_range, remark];
+      return res.status(400).json({
+        error: "Please select a patient."
+      });
     }
+
     const resultQuery = await query(req.tenantId, sql, params);
-    res.json({ id: resultQuery.insertId, message: "Lab report added successfully" });
+
+    res.json({
+      id: resultQuery.insertId,
+      message: "Lab report added successfully"
+    });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Lab report error:", err);
+
+    res.status(500).json({
+      error: err.message
+    });
   }
 });
-
 app.put("/api/labreports/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { result, normal_range, remark } = req.body;
@@ -686,7 +923,7 @@ app.delete("/api/labreports/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// ==================== PRESCRIPTIONS (patient filtering) ====================
+// ==================== PRESCRIPTIONS ====================
 app.get("/api/prescriptions", authMiddleware, async (req, res) => {
   try {
     let patientId = null;
@@ -763,38 +1000,37 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: "healthaxis.team@gmail.com",
-    pass: "pwozxssbnuxmrnag"   // ⚠️ Move to .env in production
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
 
-// In‑memory OTP store (use Redis/DB for production)
-const otpStore = new Map(); // email -> { otp, expiresAt, verified }
+// In-memory OTP store (use Redis/DB for production)
+const otpStore = new Map();
 
 // Send OTP
 app.post("/api/send-otp", async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: "Email required" });
 
-  // Check if email already exists
   const existing = await query(req.tenantId, "SELECT id FROM admin WHERE email = ?", [email]);
   if (existing.length > 0) {
     return res.status(400).json({ error: "Email already registered. Please login." });
   }
 
   const otp = Math.floor(100000 + Math.random() * 900000);
-  const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
+  const expiresAt = Date.now() + 5 * 60 * 1000;
   otpStore.set(email, { otp, expiresAt, verified: false });
 
-  console.log(`OTP for ${email}: ${otp}`); // for debugging
+  console.log(`OTP for ${email}: ${otp}`);
 
   const mailOptions = {
-    from: "healthaxis.team@gmail.com",
+    from: process.env.EMAIL_USER,
     to: email,
     subject: "HealthAxis HMS Email Verification OTP",
     html: `
       <div style="font-family: Arial, sans-serif; padding:25px; background:#111; color:#ffffff; border-radius:10px;">
-        <h2 style="color:#ffffff;">🏥 HealthAxis Hospital Management System</h2>
+        <h2 style="color:#ffffff;">HealthAxis Hospital Management System</h2>
         <p>Hello,</p>
         <p>Your One-Time Password (OTP) for account verification is:</p>
         <h1 style="letter-spacing:4px; color:#2c7be5;">${otp}</h1>
@@ -830,7 +1066,6 @@ app.post("/api/verify-otp", (req, res) => {
   if (record.otp !== parseInt(otp)) {
     return res.status(400).json({ error: "Invalid OTP." });
   }
-  // Mark as verified
   record.verified = true;
   otpStore.set(email, record);
   res.json({ success: true, message: "OTP verified. Proceed to registration." });
@@ -848,7 +1083,6 @@ app.post("/api/register-patient", async (req, res) => {
     return res.status(400).json({ error: "Email not verified. Please verify OTP first." });
   }
 
-  // Double‑check email not already used
   const existing = await query(req.tenantId, "SELECT id FROM admin WHERE email = ?", [email]);
   if (existing.length > 0) {
     return res.status(400).json({ error: "Email already registered." });
@@ -856,23 +1090,19 @@ app.post("/api/register-patient", async (req, res) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Insert into admin table
   const adminResult = await query(req.tenantId,
     "INSERT INTO admin (name, email, password, role, is_active, created_at) VALUES (?, ?, ?, 'patient', 1, NOW())",
     [name, email, hashedPassword]
   );
   const userId = adminResult.insertId;
 
-  // Insert into patients table (link with user_id)
   await query(req.tenantId,
     "INSERT INTO patients (name, age, gender, phone, email, address, blood_group, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())",
     [name, age || null, gender || null, phone || null, email, address || null, blood_group || null, userId]
   );
 
-  // Clean up OTP store
   otpStore.delete(email);
 
-  // Generate tokens for auto‑login
   const privateKey = fs.readFileSync(path.join(__dirname, './keys/private_key.pem'), 'utf8');
   const accessToken = jwt.sign(
     { userId, role: 'patient', tenantId: req.tenantId },
@@ -887,12 +1117,43 @@ app.post("/api/register-patient", async (req, res) => {
   });
 });
 
+// ==================== HOME ROUTE ====================
+app.get("/", (req, res) => {
+  res.send("Welcome to HealthAxis Hospital Management System API");
+});
+
+// ==================== DATABASE CONNECTION TEST ====================
+app.get("/test-db", async (req, res) => {
+  try {
+    const result = await query(
+      req.tenantId,
+      "SELECT 1 AS connected"
+    );
+
+    res.json({
+      status: "Database connected successfully",
+      result: result
+    });
+  } catch (err) {
+    console.error("Database connection error:", err);
+
+    res.status(500).json({
+      status: "Database connection failed",
+      error: err.message
+    });
+  }
+});
+
 // ==================== HEALTH CHECK ====================
 app.get("/health", (req, res) => {
-  res.json({ status: "OK", tenant: req.tenantId });
+  res.json({
+    status: "OK",
+    tenant: req.tenantId
+  });
 });
 
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
